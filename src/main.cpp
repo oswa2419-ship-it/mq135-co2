@@ -289,10 +289,22 @@ void setup() {
   display.display();
 
   Serial.println("Comandos: c=calibrar  p=print  r=raw");
-  if (digitalRead(Pin::BTN) == LOW) {
+
+  const bool forceCal = digitalRead(Pin::BTN) == LOW;
+  const bool needCal = !calibrated;
+
+  if (!forceCal && !needCal) {
+    const uint32_t start = millis();
+    while (millis() - start < Cal::PREHEAT_MS) {
+      drawProgress("Precalentando", millis() - start, Cal::PREHEAT_MS);
+      delay(200);
+    }
+  }
+
+  if (forceCal) {
     Serial.println("Boton presionado: forzando calibracion.");
     runCalibration();
-  } else if (!calibrated) {
+  } else if (needCal) {
     Serial.println("Sin RZero guardado: arrancando calibracion inicial.");
     runCalibration();
   }
